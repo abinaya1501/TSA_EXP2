@@ -16,11 +16,7 @@ Calculate the polynomial trend values using least square method
 
 End the program
 ### PROGRAM:
-
-
-
 ```
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -78,8 +74,6 @@ plt.tight_layout()
 plt.show()
 
 # End the program (no further actions required)
-
-
 ```
 ### OUTPUT
 A - LINEAR TREND ESTIMATION
