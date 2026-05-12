@@ -1,7 +1,5 @@
 # Ex.No: 02 LINEAR AND POLYNOMIAL TREND ESTIMATION
-Date:25.04.2026
-## NAME:ABINAYA A
-## REG NO : 212224230004
+Date: 25.04.2026
 ### AIM:
 To Implement Linear and Polynomial Trend Estiamtion Using Python.
 
@@ -16,71 +14,124 @@ Calculate the polynomial trend values using least square method
 
 End the program
 ### PROGRAM:
+
 ```
-import numpy as np
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
-# Load the dataset
-file_path = 'Gold Price Prediction.csv'  # Replace with your actual file path
-data = pd.read_csv(file_path)
+# Load Dataset
+data = pd.read_csv('/content/Video_Games_Sales.csv')
 
-# Convert 'Date' column to datetime format and specify the correct format
-data['Date'] = pd.to_datetime(data['Date'], format='%m/%d/%y')
+# Remove missing values
+data = data.dropna(subset=['Year_of_Release'])
 
-# Set the 'Date' column as the index
-data.set_index('Date', inplace=True)
+# Convert year column into integer
+data['Year_of_Release'] = data['Year_of_Release'].astype(int)
 
-# Extract the time (x values) and 'Price Today' (y values)
-data['Time'] = np.arange(len(data))
-x = data['Time'].values
-y = data['Price Today'].values
+# Resample Yearly Total Sales
+resampled_data = data.groupby('Year_of_Release')['Global_Sales'].sum().to_frame()
 
-# Linear trend calculation (degree 1 polynomial)
-linear_coefficients = np.polyfit(x, y, 1)
-linear_trend = np.polyval(linear_coefficients, x)
+# Reset index
+resampled_data = resampled_data.reset_index()
 
-# Polynomial trend calculation (degree 2 polynomial)
-polynomial_coefficients = np.polyfit(x, y, 2)
-polynomial_trend = np.polyval(polynomial_coefficients, x)
+# Create Year index for trend calculation
+resampled_data['Year_Num'] = range(len(resampled_data))
 
-# Create subplots: one for the linear trend, one for the polynomial trend
-plt.figure(figsize=(12, 10))
+# Prepare Data
+X = resampled_data['Year_Num'].tolist()
+values = resampled_data['Global_Sales'].tolist()
 
-# Plot for linear trend
-plt.subplot(2, 1, 1)
-plt.plot(data.index, y, label='Gold Price Today', color='blue')
-plt.plot(data.index, linear_trend, label='Linear Trend', color='red')
-plt.title('Gold Price with Linear Trend')
-plt.xlabel('Date')
-plt.ylabel('Gold Price')
+# Center X values
+X = [i - X[len(X)//2] for i in X]
+
+x2 = [i**2 for i in X]
+xy = [i*j for i, j in zip(X, values)]
+
+n = len(X)
+
+# Linear Trend
+b = (n * sum(xy) - sum(values) * sum(X)) / (n * sum(x2) - (sum(X)**2))
+a = (sum(values) - b * sum(X)) / n
+
+linear_trend = [a + b * X[i] for i in range(n)]
+
+# Polynomial Trend (Degree 2)
+x3 = [i**3 for i in X]
+x4 = [i**4 for i in X]
+x2y = [i*j for i, j in zip(x2, values)]
+
+coeff = [
+    [n, sum(X), sum(x2)],
+    [sum(X), sum(x2), sum(x3)],
+    [sum(x2), sum(x3), sum(x4)]
+]
+
+Y = [sum(values), sum(xy), sum(x2y)]
+
+A = np.array(coeff)
+B = np.array(Y)
+
+a_poly, b_poly, c_poly = np.linalg.solve(A, B)
+
+poly_trend = [a_poly + b_poly * X[i] + c_poly * (X[i]**2) for i in range(n)]
+
+# Print Equations
+print(f"Linear Trend: y = {a:.2f} + {b:.4f}x")
+print(f"Polynomial Trend: y = {a_poly:.2f} + {b_poly:.4f}x + {c_poly:.4f}x^2")
+
+# Add to DataFrame
+resampled_data['Linear Trend'] = linear_trend
+resampled_data['Polynomial Trend'] = poly_trend
+
+# Set Year as index
+resampled_data.set_index('Year_of_Release', inplace=True)
+
+# Plot Linear Trend
+plt.figure(figsize=(10,5))
+
+plt.plot(resampled_data.index, resampled_data['Global_Sales'],
+         label='Actual Sales', marker='o')
+
+plt.plot(resampled_data.index, resampled_data['Linear Trend'],
+         linestyle='--', label='Linear Trend')
+
+plt.title("Yearly Linear Trend of Video Game Sales")
+plt.xlabel("Year")
+plt.ylabel("Global Sales")
 plt.legend()
-plt.grid(True)
+plt.grid()
 
-# Plot for polynomial trend
-plt.subplot(2, 1, 2)
-plt.plot(data.index, y, label='Gold Price Today', color='blue')
-plt.plot(data.index, polynomial_trend, label='Polynomial Trend (Degree 2)', color='green')
-plt.title('Gold Price with Polynomial Trend')
-plt.xlabel('Date')
-plt.ylabel('Gold Price')
-plt.legend()
-plt.grid(True)
-
-# Adjust layout to avoid overlap
-plt.tight_layout()
-
-# Show the plots
 plt.show()
 
-# End the program (no further actions required)
+# Plot Polynomial Trend
+plt.figure(figsize=(10,5))
+
+plt.plot(resampled_data.index, resampled_data['Global_Sales'],
+         label='Actual Sales', marker='o')
+
+plt.plot(resampled_data.index, resampled_data['Polynomial Trend'],
+         label='Polynomial Trend')
+
+plt.title("Yearly Polynomial Trend of Video Game Sales")
+plt.xlabel("Year")
+plt.ylabel("Global Sales")
+plt.legend()
+plt.grid()
+
+plt.show()
+
 ```
+
 ### OUTPUT
 A - LINEAR TREND ESTIMATION
-<img width="1373" height="551" alt="image" src="https://github.com/user-attachments/assets/7b0a65e1-d9fd-44b7-832b-89aafd0149ae" />
+
+<img width="989" height="586" alt="image" src="https://github.com/user-attachments/assets/f8965d43-e8f7-4db0-b483-5eaf0a868148" />
+
 
 B- POLYNOMIAL TREND ESTIMATION
-<img width="1369" height="572" alt="image" src="https://github.com/user-attachments/assets/e1a33f08-7aae-49dc-b63d-d38046200199" />
+
+<img width="1024" height="534" alt="image" src="https://github.com/user-attachments/assets/ffde034b-2ba4-40bd-8b33-ab2c1c431134" />
 
 ### RESULT:
 Thus the python program for linear and Polynomial Trend Estiamtion has been executed successfully.
